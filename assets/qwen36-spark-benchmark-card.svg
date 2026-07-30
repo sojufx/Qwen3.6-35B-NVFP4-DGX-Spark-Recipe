@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#070b12"/>
+      <stop offset="55%" stop-color="#0b1020"/>
+      <stop offset="100%" stop-color="#05070b"/>
+    </linearGradient>
+    <linearGradient id="bar" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0%" stop-color="#22c55e"/>
+      <stop offset="58%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#a78bfa"/>
+    </linearGradient>
+    <linearGradient id="hot" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#facc15"/>
+      <stop offset="45%" stop-color="#fb923c"/>
+      <stop offset="100%" stop-color="#ef4444"/>
+    </linearGradient>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <style>
+      .sans { }
+      .mono { }
+      .muted { fill: #94a3b8; }
+      .white { fill: #f8fafc; }
+      .grid { stroke: #1e293b; stroke-width: 2; }
+    </style>
+  </defs>
+
+  <rect width="1600" height="900" fill="url(#bg)"/>
+  <circle cx="1375" cy="120" r="310" fill="#172554" opacity="0.25"/>
+  <circle cx="155" cy="790" r="280" fill="#064e3b" opacity="0.18"/>
+
+  <rect x="54" y="50" width="1492" height="800" rx="46" fill="#0f172a" opacity="0.74" stroke="#25334a" stroke-width="2"/>
+
+  <text x="90" y="132" class="sans white" font-size="54" font-weight="800">Qwen3.6 35B NVFP4 on 1× DGX Spark</text>
+  <text x="92" y="183" class="sans muted" font-size="27">Native vLLM 0.26 · 262K context · FP8 KV · DFlash K=7 · no custom container</text>
+
+  <rect x="92" y="222" width="404" height="116" rx="28" fill="#020617" stroke="#1e293b"/>
+  <text x="122" y="268" class="sans muted" font-size="24">single stream</text>
+  <text x="122" y="318" class="sans white" font-size="54" font-weight="900">73.4</text>
+  <text x="276" y="316" class="sans muted" font-size="30">tok/s</text>
+
+  <rect x="522" y="222" width="450" height="116" rx="28" fill="#020617" stroke="#1e293b"/>
+  <text x="552" y="268" class="sans muted" font-size="24">8-session aggregate</text>
+  <text x="552" y="318" class="sans white" font-size="54" font-weight="900">338.4</text>
+  <text x="735" y="316" class="sans muted" font-size="30">tok/s</text>
+
+  <rect x="998" y="222" width="458" height="116" rx="28" fill="#111827" stroke="#334155"/>
+  <text x="1028" y="268" class="sans muted" font-size="24">model shape</text>
+  <text x="1028" y="313" class="sans white" font-size="36" font-weight="800">35B-A3B MoE</text>
+  <text x="1250" y="313" class="sans muted" font-size="23">large feel, small active slice</text>
+
+  <text x="98" y="416" class="sans white" font-size="34" font-weight="800">Concurrency sweep</text>
+  <text x="98" y="454" class="sans muted" font-size="22">Exact 500-token code-shaped generations, OpenAI-compatible endpoint</text>
+
+  <line x1="150" y1="730" x2="1450" y2="730" class="grid"/>
+  <line x1="150" y1="640" x2="1450" y2="640" class="grid"/>
+  <line x1="150" y1="550" x2="1450" y2="550" class="grid"/>
+  <line x1="150" y1="460" x2="1450" y2="460" class="grid"/>
+
+  <text x="102" y="737" class="mono muted" font-size="18">0</text>
+  <text x="91" y="647" class="mono muted" font-size="18">100</text>
+  <text x="91" y="557" class="mono muted" font-size="18">200</text>
+  <text x="91" y="467" class="mono muted" font-size="18">300</text>
+
+  <rect x="213" y="664" width="116" height="66" rx="16" fill="url(#bar)" filter="url(#glow)"/>
+  <text x="206" y="648" class="mono white" font-size="24" font-weight="800">73.4</text>
+  <text x="239" y="772" class="mono muted" font-size="25">1×</text>
+
+  <rect x="428" y="597" width="116" height="133" rx="16" fill="url(#bar)" filter="url(#glow)"/>
+  <text x="414" y="581" class="mono white" font-size="24" font-weight="800">147.4</text>
+  <text x="454" y="772" class="mono muted" font-size="25">2×</text>
+
+  <rect x="643" y="516" width="116" height="214" rx="16" fill="url(#bar)" filter="url(#glow)"/>
+  <text x="629" y="500" class="mono white" font-size="24" font-weight="800">238.0</text>
+  <text x="669" y="772" class="mono muted" font-size="25">4×</text>
+
+  <rect x="858" y="436" width="116" height="294" rx="16" fill="url(#bar)" filter="url(#glow)"/>
+  <text x="844" y="420" class="mono white" font-size="24" font-weight="800">327.0</text>
+  <text x="884" y="772" class="mono muted" font-size="25">6×</text>
+
+  <rect x="1073" y="425" width="116" height="305" rx="16" fill="url(#bar)" filter="url(#glow)"/>
+  <text x="1059" y="409" class="mono white" font-size="24" font-weight="800">338.4</text>
+  <text x="1099" y="772" class="mono muted" font-size="25">8×</text>
+
+  <path d="M270 664 C420 610, 490 592, 486 597 C610 545, 675 522, 701 516 C805 468, 886 445, 916 436 C1018 425, 1110 421, 1131 425" fill="none" stroke="url(#hot)" stroke-width="7" stroke-linecap="round" opacity="0.92"/>
+
+  <rect x="1225" y="454" width="230" height="155" rx="24" fill="#020617" stroke="#334155"/>
+  <text x="1252" y="498" class="sans muted" font-size="22">startup</text>
+  <text x="1252" y="545" class="sans white" font-size="34" font-weight="800">647K KV</text>
+  <text x="1252" y="584" class="sans muted" font-size="21">cache tokens</text>
+
+  <rect x="1225" y="630" width="230" height="100" rx="24" fill="#020617" stroke="#334155"/>
+  <text x="1252" y="672" class="sans muted" font-size="22">single request</text>
+  <text x="1252" y="713" class="sans white" font-size="31" font-weight="800">262,144 ctx</text>
+
+  <text x="92" y="825" class="mono muted" font-size="22">github.com/sojufx/Qwen3.6-35B-NVFP4-DGX-Spark-Recipe</text>
+  <text x="1210" y="825" class="sans white" font-size="25" font-weight="800">One Spark. Native vLLM. Real numbers.</text>
+</svg>
