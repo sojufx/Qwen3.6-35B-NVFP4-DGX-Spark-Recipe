@@ -2,11 +2,7 @@
 
 A native vLLM `0.26` recipe for running `unsloth/Qwen3.6-35B-A3B-NVFP4` on a single NVIDIA DGX Spark / GB10 with 262K context, FP8 KV cache, DFlash speculative decoding, tool/reasoning parser support, and strong multi-session throughput.
 
-Tagline:
-
-```text
-Native vLLM. One Spark. 262K context. 338 tok/s aggregate.
-```
+> Native vLLM. One Spark. 262K context. 338 tok/s aggregate.
 
 ![Qwen3.6 35B NVFP4 DGX Spark benchmark](assets/qwen36-spark-benchmark-card.png)
 
