@@ -8,6 +8,8 @@ Tagline:
 Native vLLM. One Spark. 262K context. 338 tok/s aggregate.
 ```
 
+![Qwen3.6 35B NVFP4 DGX Spark benchmark](assets/qwen36-spark-benchmark-card.png)
+
 ## Why this setup matters
 
 Qwen3.6 35B-A3B NVFP4 is a strong fit for Spark because it is MoE: the model is large, but only a smaller active slice runs per token. With FP8 KV cache and DFlash speculative decoding, it can deliver both long context and serious aggregate throughput on one 128GB unified-memory box.
