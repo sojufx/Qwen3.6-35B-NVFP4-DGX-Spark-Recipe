@@ -1,6 +1,24 @@
 # Configuration notes
 
-## Stable high-speed profile
+## Native vLLM 0.26 profile tested locally
+
+```bash
+--max-model-len 262144
+--max-num-seqs 24
+--max-num-batched-tokens 32768
+--kv-cache-memory-bytes 12G
+--linear-backend auto
+--attention-backend flashinfer
+--kv-cache-dtype fp8
+--enable-chunked-prefill
+--enable-prefix-caching
+--async-scheduling
+--speculative-config '{"method":"dflash","model":"z-lab/Qwen3.6-35B-A3B-DFlash","num_speculative_tokens":7,"draft_tensor_parallel_size":1}'
+```
+
+This profile measured up to 338.4 tok/s aggregate at C8 on a short code-shaped benchmark.
+
+## Patched B12X/MTP profile
 
 ```bash
 --max-model-len 262144

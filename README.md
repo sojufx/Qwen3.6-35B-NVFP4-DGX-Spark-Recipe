@@ -28,7 +28,30 @@ Reasoning parser: qwen3
 Vision: enabled, up to 4 images/request
 ```
 
-## Published reference benchmark
+## My native vLLM 0.26 benchmark
+
+Measured on one DGX Spark using native vLLM `0.26.0`, `linear-backend auto`, FP8 KV, and `z-lab/Qwen3.6-35B-A3B-DFlash` at K=7.
+
+| Load | Aggregate tok/s | Mean stream tok/s |
+|---:|---:|---:|
+| 1x | 73.4 | 73.4 |
+| 2x | 147.4 | 74.2 |
+| 3x | 190.6 | 64.2 |
+| 4x | 238.0 | 61.2 |
+| 6x | 327.0 | 57.9 |
+| 8x | 338.4 | 43.8 |
+
+Startup:
+
+```text
+GPU KV cache size: 647,182 tokens
+Maximum concurrency for 262,144 tokens/request: 2.47x
+Selected NVFP4 GEMM: CutlassNvFp4LinearKernel
+```
+
+Full notes: [`results/2026-07-30-native-vllm026-dflash-k7.md`](results/2026-07-30-native-vllm026-dflash-k7.md)
+
+## B12X/MTP reference benchmark
 
 MiaAI-Lab reported the following for this stack on one DGX Spark:
 
@@ -41,7 +64,7 @@ MiaAI-Lab reported the following for this stack on one DGX Spark:
 | 6x | 233 ms | 235.3 tok/s | 40.5 tok/s |
 | 8x | 242 ms | 317.0 tok/s | 41.1 tok/s |
 
-My own local benchmark slot is in [`results/`](results/). Rerun the benchmark script after startup and replace the placeholder with your real box numbers.
+That reference uses the patched B12X/MTP path. My native vLLM benchmark above uses the older DFlash K7 setup we had already proven locally, updated to vLLM 0.26.
 
 ## Quickstart
 
@@ -108,4 +131,4 @@ This recipe is inspired by our own earlier Spark experiments and the excellent w
 - [`systemd/qwen-vllm.service`](systemd/qwen-vllm.service) — optional autostart template
 - [`docs/CONFIG.md`](docs/CONFIG.md) — flag notes
 - [`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md) — common failures
-- [`results/benchmark-placeholder.md`](results/benchmark-placeholder.md) — replace with your own measured run
+- [`results/2026-07-30-native-vllm026-dflash-k7.md`](results/2026-07-30-native-vllm026-dflash-k7.md) — measured native vLLM result
