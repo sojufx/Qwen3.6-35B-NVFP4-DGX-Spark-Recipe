@@ -1,14 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-CONTAINER_NAME="${CONTAINER_NAME:-qwen36-35b-nvfp4}"
+PORT="${PORT:-8000}"
 
-if docker ps --format '{{.Names}}' | grep -qx "${CONTAINER_NAME}"; then
-  docker stop "${CONTAINER_NAME}"
-fi
-
-if docker ps -a --format '{{.Names}}' | grep -qx "${CONTAINER_NAME}"; then
-  docker rm "${CONTAINER_NAME}"
+if command -v lsof >/dev/null 2>&1; then
+  pids="$(lsof -ti tcp:"${PORT}" || true)"
+  if [[ -n "${pids}" ]]; then
+    kill ${pids}
+  fi
 fi
 
 echo "Stopped ${CONTAINER_NAME}"

@@ -18,45 +18,45 @@
 
 This profile measured up to 338.4 tok/s aggregate at C8 on a short code-shaped benchmark.
 
-## Patched B12X/MTP profile
+## Safer lower-memory variant
 
 ```bash
 --max-model-len 262144
---max-num-seqs 24
---max-num-batched-tokens 32768
---gpu-memory-utilization 0.80
+--max-num-seqs 8
+--max-num-batched-tokens 8192
+--kv-cache-memory-bytes 10G
 --kv-cache-dtype fp8
 --enable-chunked-prefill
+--enable-prefix-caching
 --async-scheduling
 ```
 
-This is an aggressive profile intended for the patched GB10 image path. If your Spark gets close to OOM, first reduce:
+Use this if you want the same 262K request window with less prefill pressure and lower multi-user throughput.
+
+## Higher-throughput variant
+
+The tested profile used:
 
 ```bash
---gpu-memory-utilization 0.70
---max-num-batched-tokens 8192
---max-num-seqs 8
+--max-num-seqs 24
+--max-num-batched-tokens 32768
+--kv-cache-memory-bytes 12G
 ```
 
-## B12X linear backend
+This measured best in our short code-shaped concurrency run. If your Spark gets close to OOM or power-limited after crash testing, drop `--max-num-batched-tokens` first.
 
-```bash
---linear-backend flashinfer_b12x
-```
-
-This is useful on GB10 for NVFP4 GEMM, but the Unsloth Qwen3.6 NVFP4 checkpoint is mixed FP8 + NVFP4. A patched runtime is needed so unsupported layers fall back to auto selection instead of crashing.
-
-## MTP speculative decode
+## DFlash speculative decode
 
 ```json
 {
-  "method": "mtp",
-  "num_speculative_tokens": 2,
-  "moe_backend": "triton"
+  "method": "dflash",
+  "model": "z-lab/Qwen3.6-35B-A3B-DFlash",
+  "num_speculative_tokens": 7,
+  "draft_tensor_parallel_size": 1
 }
 ```
 
-MTP is built into the checkpoint path and is the recommended speculative decode mode for this recipe.
+K=7 was the stable choice in this recipe. Increasing K can look faster in short bursts, but it can waste compute if later draft positions are rarely accepted.
 
 ## Tool use and reasoning
 

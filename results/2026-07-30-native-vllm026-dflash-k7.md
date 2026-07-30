@@ -49,6 +49,6 @@ Average draft acceptance rate: ~35-42%
 
 ## Interpretation
 
-This native vLLM 0.26 setup is strong for aggregate throughput. It did not use the patched `flashinfer_b12x` path; vLLM selected `CutlassNvFp4LinearKernel` for NVFP4 GEMM.
+This native vLLM 0.26 setup is strong for aggregate throughput while keeping the full 262K request window available. vLLM selected `CutlassNvFp4LinearKernel` for NVFP4 GEMM, FP8 KV kept the long-context memory footprint manageable, and DFlash K=7 provided useful speculative speedup.
 
-The result is lower single-stream decode than the B12X/MTP reference path, but very good multi-session throughput on this short code-shaped benchmark.
+The headline result is the multi-session shape: 73.4 tok/s at one stream and 338.4 tok/s aggregate at eight streams on this short code-shaped benchmark.

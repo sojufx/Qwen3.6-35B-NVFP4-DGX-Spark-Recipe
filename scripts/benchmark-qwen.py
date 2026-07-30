@@ -57,7 +57,7 @@ def run_concurrency(base_url: str, api_key: str | None, model: str, max_tokens: 
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--base-url", default="http://127.0.0.1:8888/v1")
+    parser.add_argument("--base-url", default="http://127.0.0.1:8000/v1")
     parser.add_argument("--api-key", default=None)
     parser.add_argument("--model", default="qwen36-35b")
     parser.add_argument("--max-tokens", type=int, default=500)

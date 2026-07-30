@@ -1,11 +1,5 @@
 # Troubleshooting
 
-## `flashinfer_b12x` crashes on some layer types
-
-That usually means the runtime is stock vLLM behavior: forced linear backend is treated as a hard requirement for every layer.
-
-Use a GB10 image/runtime with soft fallback for unsupported linear layer types.
-
 ## `no kernel image is available for execution on the device`
 
 Make sure this is set before serving:
@@ -14,7 +8,7 @@ Make sure this is set before serving:
 export CUTE_DSL_ARCH=sm_121a
 ```
 
-Also confirm the runtime image was built for ARM64 / SM121 / GB10.
+Also confirm the runtime was built or installed for ARM64 / SM121 / GB10.
 
 ## OOM or whole-box lockup
 
@@ -35,13 +29,13 @@ If the box gets power-limited after OOM, do a full shutdown, unplug power briefl
 Check logs:
 
 ```bash
-docker logs -f qwen36-35b-nvfp4
+journalctl -u qwen-vllm -f
 ```
 
 Check readiness:
 
 ```bash
-curl -s http://127.0.0.1:8888/v1/models
+curl -s http://127.0.0.1:8000/v1/models
 ```
 
 ## Vision inputs

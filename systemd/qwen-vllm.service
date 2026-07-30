@@ -1,15 +1,15 @@
 [Unit]
 Description=vLLM Qwen3.6 35B NVFP4 Server
-After=network-online.target docker.service
-Wants=network-online.target docker.service
+After=network-online.target
+Wants=network-online.target
 
 [Service]
 Type=simple
 User=CHANGE_ME
-WorkingDirectory=/home/CHANGE_ME/Unsloth-Qwen3.6-35B-NVFP4-DGX-Spark-Recipe
+WorkingDirectory=/home/CHANGE_ME/Qwen3.6-35B-NVFP4-DGX-Spark-Recipe
 EnvironmentFile=/home/CHANGE_ME/qwen-vllm.env
-ExecStart=/home/CHANGE_ME/Unsloth-Qwen3.6-35B-NVFP4-DGX-Spark-Recipe/scripts/start-qwen.sh
-ExecStop=/home/CHANGE_ME/Unsloth-Qwen3.6-35B-NVFP4-DGX-Spark-Recipe/scripts/stop-qwen.sh
+ExecStart=/home/CHANGE_ME/Qwen3.6-35B-NVFP4-DGX-Spark-Recipe/scripts/start-qwen-native-vllm026.sh
+ExecStop=/home/CHANGE_ME/Qwen3.6-35B-NVFP4-DGX-Spark-Recipe/scripts/stop-qwen.sh
 Restart=always
 RestartSec=10
 TimeoutStartSec=900

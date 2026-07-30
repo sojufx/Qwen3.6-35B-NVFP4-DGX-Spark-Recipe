@@ -1,28 +1,41 @@
 # Qwen3.6 35B NVFP4 on 1x DGX Spark
 
-A practical recipe for running `unsloth/Qwen3.6-35B-A3B-NVFP4` on a single NVIDIA DGX Spark / GB10 with vLLM `0.26`, FP8 KV cache, native GB10 kernels, and speculative decoding.
+A native vLLM `0.26` recipe for running `unsloth/Qwen3.6-35B-A3B-NVFP4` on a single NVIDIA DGX Spark / GB10 with 262K context, FP8 KV cache, DFlash speculative decoding, tool/reasoning parser support, and strong multi-session throughput.
 
-This repo is the companion to my Laguna S 2.1 Spark recipe, but for the Qwen3.6 35B-A3B NVFP4 path. The goal is simple: a fast, useful, OpenAI-compatible local coding/agent model on one Spark.
+Tagline:
+
+```text
+Native vLLM. One Spark. 262K context. 338 tok/s aggregate.
+```
 
 ## Why this setup matters
 
-Qwen3.6 35B-A3B NVFP4 is a strong fit for Spark because it is MoE: the total model is large, but only a smaller active slice runs per token. With the right vLLM/FlashInfer path, it can be fast enough for real interactive use.
+Qwen3.6 35B-A3B NVFP4 is a strong fit for Spark because it is MoE: the model is large, but only a smaller active slice runs per token. With FP8 KV cache and DFlash speculative decoding, it can deliver both long context and serious aggregate throughput on one 128GB unified-memory box.
 
-The important trick is not just `vllm serve`.
+This recipe is focused on the native vLLM path:
 
-The Unsloth Qwen3.6 NVFP4 checkpoint mixes FP8 dense layers with NVFP4 MoE/linear layers. Forcing `flashinfer_b12x` everywhere can crash on unsupported layer types unless the runtime has a soft fallback path. MiaAI-Lab’s GB10 image solves that by using B12X where it works and falling back to auto selection for other layers.
+- no custom container required
+- existing venv/systemd production style
+- cached local model snapshots supported
+- 262,144-token context
+- DFlash K=7
+- 338.4 tok/s aggregate at 8 sessions in my benchmark
 
-## Tested / target profile
+The main value is reproducibility: this is not just a launch command, it includes the exact serve shape, autostart template, smoke test, and concurrency benchmark so other Spark owners can verify their own box instead of guessing.
+
+## Tested profile
 
 ```text
 Hardware: NVIDIA DGX Spark / GB10 / 128GB unified memory
-Runtime: vLLM 0.26-class GB10 image
+Runtime: native vLLM 0.26.0 venv
 Model: unsloth/Qwen3.6-35B-A3B-NVFP4
+Draft: z-lab/Qwen3.6-35B-A3B-DFlash
 Context: 262,144 tokens
 KV cache: fp8
-Linear backend: flashinfer_b12x with soft fallback
+KV cache memory: 12 GiB pinned
+Linear backend: auto
 Attention backend: flashinfer
-Spec decode: MTP, 2 speculative tokens
+Spec decode: DFlash, K=7
 Tool parser: qwen3_coder
 Reasoning parser: qwen3
 Vision: enabled, up to 4 images/request
@@ -51,37 +64,21 @@ Selected NVFP4 GEMM: CutlassNvFp4LinearKernel
 
 Full notes: [`results/2026-07-30-native-vllm026-dflash-k7.md`](results/2026-07-30-native-vllm026-dflash-k7.md)
 
-## B12X/MTP reference benchmark
-
-MiaAI-Lab reported the following for this stack on one DGX Spark:
-
-| Load | TTFT | Aggregate | Stream |
-|---:|---:|---:|---:|
-| 1x | 103 ms | 95.1 tok/s | 95.1 tok/s |
-| 2x | 165 ms | 132.0 tok/s | 67.3 tok/s |
-| 3x | 142 ms | 149.4 tok/s | 50.3 tok/s |
-| 4x | 214 ms | 171.6 tok/s | 49.7 tok/s |
-| 6x | 233 ms | 235.3 tok/s | 40.5 tok/s |
-| 8x | 242 ms | 317.0 tok/s | 41.1 tok/s |
-
-That reference uses the patched B12X/MTP path. My native vLLM benchmark above uses the older DFlash K7 setup we had already proven locally, updated to vLLM 0.26.
-
 ## Quickstart
 
 ```bash
-git clone https://github.com/sojufx/Unsloth-Qwen3.6-35B-NVFP4-DGX-Spark-Recipe.git
-cd Unsloth-Qwen3.6-35B-NVFP4-DGX-Spark-Recipe
+git clone https://github.com/sojufx/Qwen3.6-35B-NVFP4-DGX-Spark-Recipe.git
+cd Qwen3.6-35B-NVFP4-DGX-Spark-Recipe
 
-export HF_TOKEN="optional-if-needed"
 export VLLM_API_KEY="change-me"
 
-./scripts/start-qwen.sh
+./scripts/start-qwen-native-vllm026.sh
 ```
 
 OpenAI-compatible endpoint:
 
 ```text
-http://127.0.0.1:8888/v1
+http://127.0.0.1:8000/v1
 ```
 
 ## Main serve flags
@@ -91,15 +88,17 @@ http://127.0.0.1:8888/v1
 --tensor-parallel-size 1
 --trust-remote-code
 --moe-backend auto
---linear-backend flashinfer_b12x
+--linear-backend auto
 --attention-backend flashinfer
 --kv-cache-dtype fp8
+--kv-cache-memory-bytes 12G
 --max-model-len 262144
 --max-num-seqs 24
 --max-num-batched-tokens 32768
 --enable-chunked-prefill
+--enable-prefix-caching
 --async-scheduling
---speculative-config '{"method":"mtp","num_speculative_tokens":2,"moe_backend":"triton"}'
+--speculative-config '{"method":"dflash","model":"z-lab/Qwen3.6-35B-A3B-DFlash","num_speculative_tokens":7,"draft_tensor_parallel_size":1}'
 --tool-call-parser qwen3_coder
 --enable-auto-tool-choice
 --reasoning-parser qwen3
@@ -107,25 +106,25 @@ http://127.0.0.1:8888/v1
 
 ## Important notes
 
-- Use a GB10/SM121-compatible vLLM image.
+- Use vLLM `0.26.0` or newer with GB10/SM121 support.
 - Set `CUTE_DSL_ARCH=sm_121a`.
 - Use FP8 KV for 256K context.
-- Do not blindly force B12X on stock vLLM unless the runtime supports soft fallback for unsupported layer types.
 - This model can support image inputs when the runtime and client send multimodal chat messages correctly.
-- Keep this separate from your main production model until you have benchmarked it on your own box.
+- The benchmark in this repo is a short code-shaped decode test with exact 500-token outputs.
+- For long-context agent workloads, run your own benchmark before changing production.
 
 ## Credits
 
-This recipe is inspired by our own earlier Spark experiments and the excellent work from:
+Built from our own DGX Spark experiments with:
 
 - [Unsloth Qwen3.6 35B NVFP4 model](https://huggingface.co/unsloth/Qwen3.6-35B-A3B-NVFP4)
-- [MiaAI-Lab DGX Spark recipe](https://github.com/MiaAI-Lab/Unsloth-Qwen3.6-35b-NVFP4-DGX-Spark)
+- [z-lab Qwen3.6 35B DFlash draft](https://huggingface.co/z-lab/Qwen3.6-35B-A3B-DFlash)
 - [vLLM](https://github.com/vllm-project/vllm)
 - [FlashInfer](https://github.com/flashinfer-ai/flashinfer)
 
 ## Files
 
-- [`scripts/start-qwen.sh`](scripts/start-qwen.sh) — Docker/vLLM serve wrapper
+- [`scripts/start-qwen-native-vllm026.sh`](scripts/start-qwen-native-vllm026.sh) — tested native vLLM launcher
 - [`scripts/stop-qwen.sh`](scripts/stop-qwen.sh) — stop helper
 - [`scripts/benchmark-qwen.py`](scripts/benchmark-qwen.py) — OpenAI-compatible benchmark
 - [`systemd/qwen-vllm.service`](systemd/qwen-vllm.service) — optional autostart template

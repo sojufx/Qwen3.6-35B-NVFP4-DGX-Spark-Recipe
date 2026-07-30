@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-MODEL_ID="/home/sojufx/.cache/huggingface/hub/models--unsloth--Qwen3.6-35B-A3B-NVFP4/snapshots/739af1e7aac320af1682ed1e0cce369af4c5265d"
-DRAFT_MODEL="/home/sojufx/.cache/huggingface/hub/models--z-lab--Qwen3.6-35B-A3B-DFlash/snapshots/f181eece646affea2c38b2765f1aaa01a9734ccd"
-PYTHON_BIN="/home/sojufx/vllm-026/bin/python"
+MODEL_ID="${MODEL_ID:-unsloth/Qwen3.6-35B-A3B-NVFP4}"
+DRAFT_MODEL="${DRAFT_MODEL:-z-lab/Qwen3.6-35B-A3B-DFlash}"
+PYTHON_BIN="${PYTHON_BIN:-$HOME/vllm-026/bin/python}"
+HOST="${HOST:-0.0.0.0}"
+PORT="${PORT:-8000}"
+SERVED_MODEL_NAME="${SERVED_MODEL_NAME:-qwen36-35b}"
 
 export VLLM_TARGET_DEVICE=cuda
 export CUTE_DSL_ARCH=sm_121a
@@ -14,9 +17,9 @@ export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
 exec "$PYTHON_BIN" -m vllm.entrypoints.openai.api_server \
   --model "$MODEL_ID" \
-  --host 0.0.0.0 \
-  --port 8000 \
-  --served-model-name ornith \
+  --host "$HOST" \
+  --port "$PORT" \
+  --served-model-name "$SERVED_MODEL_NAME" \
   --tensor-parallel-size 1 \
   --trust-remote-code \
   --moe-backend auto \

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-BASE_URL="${BASE_URL:-http://127.0.0.1:8888/v1}"
+BASE_URL="${BASE_URL:-http://127.0.0.1:8000/v1}"
 MODEL="${SERVED_MODEL_NAME:-qwen36-35b}"
 
 AUTH_ARGS=()
