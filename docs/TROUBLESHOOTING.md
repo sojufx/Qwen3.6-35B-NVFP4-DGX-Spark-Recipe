@@ -24,6 +24,34 @@ Try safer values:
 
 If the box gets power-limited after OOM, do a full shutdown, unplug power briefly, then boot again.
 
+## vLLM 0.27 crashes with CUTLASS FP4 MoE
+
+If vLLM 0.27 starts but crashes on first request with something like:
+
+```text
+RuntimeError: run_fp4_blockwise_scaled_group_mm_sm120
+Failed to initialize GEMM: status=7
+workspace_size=43008 num_experts=256 M=65536 N=1024 K=2048
+```
+
+force Marlin for MoE:
+
+```bash
+--moe-backend marlin
+```
+
+This avoids the CUTLASS FP4 MoE path that failed on my GB10 setup.
+
+## Non-fatal xgrammar FSM warnings
+
+During one vLLM 0.27 benchmark, the server logged:
+
+```text
+backend_xgrammar.py ... Failed to advance FSM
+```
+
+The request still returned HTTP 200. If tool calls or structured output behave strangely, inspect the tool parser / structured-output path before blaming the model weights.
+
 ## Container starts but endpoint is not ready
 
 Check logs:
