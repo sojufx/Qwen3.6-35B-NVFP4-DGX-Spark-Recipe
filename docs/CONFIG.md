@@ -1,26 +1,45 @@
 # Configuration notes
 
-## Native vLLM 0.27 + RedHat DSpark profile tested locally
+## Current native vLLM 0.27.2 + RedHat DSpark production profile
 
 ```bash
 --max-model-len 262144
 --max-num-seqs 16
 --max-num-batched-tokens 8192
---gpu-memory-utilization 0.65
---kv-cache-memory-bytes 12G
+--gpu-memory-utilization 0.75
 --moe-backend marlin
 --linear-backend auto
 --attention-backend flashinfer
 --kv-cache-dtype fp8
 --enable-chunked-prefill
 --enable-prefix-caching
+--prefix-match-unit 16
 --async-scheduling
 --speculative-config '{"method":"dspark","model":"RedHatAI/Qwen3.6-35B-A3B-speculator.dspark","num_speculative_tokens":8}'
 ```
 
-This profile measured up to 417.8 tok/s aggregate at C8 on the fixed code-edit benchmark.
+This is the current production profile tested on native vLLM `0.27.2rc1.dev91+g1f7427bc0`.
+
+Observed startup:
+
+```text
+GPU KV cache size: 5,004,723 tokens
+Maximum concurrency for 262,144 tokens per request: 19.09x
+Available KV cache memory: 61.95 GiB
+```
+
+Observed fixed decode benchmark at `temperature=0.7`:
+
+```text
+Single stream: ~93-111 tok/s
+C4 aggregate: ~233-274 tok/s
+C8 aggregate: ~310-369 tok/s
+Peak C8 aggregate: 368.9 tok/s
+```
 
 The important part is `--moe-backend marlin`. On vLLM 0.27, `auto` selected a CUTLASS FP4 MoE path on my Spark and crashed on first request.
+
+The second important production change is letting `--gpu-memory-utilization 0.75` size the KV cache instead of pinning `--kv-cache-memory-bytes 12G`. The old 12G pin can still be safer for memory-constrained testing, but the 0.75 profile gives much more full-context headroom on this model.
 
 ## Native vLLM 0.26 profile tested locally
 
@@ -54,6 +73,17 @@ This profile measured up to 338.4 tok/s aggregate at C8 on a short code-shaped b
 ```
 
 Use this if you want the same 262K request window with less prefill pressure and lower multi-user throughput.
+
+## Fixed-KV compatibility variant
+
+If a newer vLLM/FlashInfer build becomes unstable with large dynamic KV allocation, fall back to:
+
+```bash
+--gpu-memory-utilization 0.65
+--kv-cache-memory-bytes 12G
+```
+
+That older profile gave lower full-context concurrency but was useful while testing vLLM `0.27.1`.
 
 ## Higher-throughput variant
 
