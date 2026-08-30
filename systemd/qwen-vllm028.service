@@ -1,0 +1,22 @@
+[Unit]
+Description=vLLM 0.28 Qwen3.6 35B NVFP4 with RedHat DSpark K=8
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=YOUR_USER
+WorkingDirectory=/home/YOUR_USER/Qwen3.6-35B-NVFP4-DGX-Spark-Recipe
+Environment=HOME=/home/YOUR_USER
+EnvironmentFile=/etc/qwen36-vllm.env
+ExecStart=/home/YOUR_USER/Qwen3.6-35B-NVFP4-DGX-Spark-Recipe/scripts/start-qwen-vllm028-redhat-dspark.sh
+Restart=always
+RestartSec=10
+KillMode=mixed
+TimeoutStopSec=60
+TimeoutStartSec=1200
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

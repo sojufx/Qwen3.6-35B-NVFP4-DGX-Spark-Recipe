@@ -2,7 +2,7 @@
 
 A native vLLM recipe for running `unsloth/Qwen3.6-35B-A3B-NVFP4` on a single NVIDIA DGX Spark / GB10 with 262K context, FP8 KV cache, speculative decoding, tool/reasoning parser support, and strong multi-session throughput.
 
-> Native vLLM. One Spark. 262K context. 5M KV tokens. 369 tok/s aggregate.
+> Native vLLM 0.28. One Spark. 262K context. RedHat DSpark K=8.
 
 ![Qwen3.6 35B NVFP4 DGX Spark benchmark](assets/qwen36-spark-benchmark-card.png)
 
@@ -16,37 +16,40 @@ This recipe is focused on the native vLLM path:
 - existing venv/systemd production style
 - cached local model snapshots supported
 - 262,144-token context
-- two tested speculative paths:
+- three retained speculative paths:
   - vLLM `0.26` + DFlash K=7
   - vLLM `0.27.2` + RedHatAI DSpark K=8
-- up to 368.9 tok/s aggregate at 8 sessions in the current high-KV production profile
+  - vLLM `0.28.0` + RedHatAI DSpark K=8
+- up to 368.9 tok/s aggregate at 8 sessions in the measured vLLM 0.27.2 high-KV profile
 - up to 417.8 tok/s aggregate in an earlier short-bench fixed-KV profile
 
 The main value is reproducibility: this is not just a launch command, it includes the exact serve shape, autostart template, smoke test, and concurrency benchmark so other Spark owners can verify their own box instead of guessing.
 
-## Current tested production profile: vLLM 0.27.2 + RedHat DSpark
+## Current retained production profile: vLLM 0.28.0 + RedHat DSpark
 
 ```text
 Hardware: NVIDIA DGX Spark / GB10 / 128GB unified memory
-Runtime: native vLLM 0.27.2 nightly venv
+Runtime: native vLLM 0.28.0
 Model: unsloth/Qwen3.6-35B-A3B-NVFP4
 Draft: RedHatAI/Qwen3.6-35B-A3B-speculator.dspark
 Context: 262,144 tokens
 KV cache: fp8
 GPU memory utilization: 0.75
-KV cache memory: dynamic, ~61.95 GiB available for KV on startup
-GPU KV cache size: ~5,004,723 tokens
-Full-context concurrency estimate: ~19.09x at 262K
+KV cache memory: dynamic, sized at startup
 MoE backend: marlin
 Linear backend: auto
-Attention backend: flashinfer
+Attention backend: triton_attn
+GDN prefill backend: triton
 Spec decode: DSpark, K=8
 Tool parser: qwen3_coder
 Reasoning parser: qwen3
-Thinking: enabled
+Thinking: enabled, medium reasoning effort
+Sampling: temperature 0.6, top_p 0.95, top_k 20
 ```
 
-### vLLM 0.27.2 + RedHat DSpark benchmark
+The 0.28 launch profile is preserved from production in [`scripts/start-qwen-vllm028-redhat-dspark.sh`](scripts/start-qwen-vllm028-redhat-dspark.sh). Its exact settings are recorded in [`results/2026-08-23-vllm028-redhat-dspark-k8-production-profile.md`](results/2026-08-23-vllm028-redhat-dspark-k8-production-profile.md). A fresh fixed-decode result was not retained for 0.28, so the measured figures below remain tied to 0.27.2.
+
+### Measured vLLM 0.27.2 + RedHat DSpark benchmark
 
 Measured on one DGX Spark using native vLLM `0.27.2rc1.dev91+g1f7427bc0`, `--gpu-memory-utilization 0.75`, `--moe-backend marlin`, FP8 KV, FlashInfer attention, prefix match unit 16, and `RedHatAI/Qwen3.6-35B-A3B-speculator.dspark` at K=8.
 
@@ -114,7 +117,7 @@ cd Qwen3.6-35B-NVFP4-DGX-Spark-Recipe
 
 export VLLM_API_KEY="change-me"
 
-./scripts/start-qwen-native-vllm027-redhat-dspark.sh
+./scripts/start-qwen-vllm028-redhat-dspark.sh
 ```
 
 OpenAI-compatible endpoint:
@@ -125,7 +128,7 @@ http://127.0.0.1:8000/v1
 
 ## Main serve flags
 
-Current vLLM `0.27.2` + RedHat DSpark profile:
+Current vLLM `0.28.0` + RedHat DSpark profile:
 
 ```bash
 --model unsloth/Qwen3.6-35B-A3B-NVFP4
@@ -133,12 +136,14 @@ Current vLLM `0.27.2` + RedHat DSpark profile:
 --trust-remote-code
 --moe-backend marlin
 --linear-backend auto
---attention-backend flashinfer
+--attention-backend triton_attn
+--gdn-prefill-backend triton
 --kv-cache-dtype fp8
 --gpu-memory-utilization 0.75
 --max-model-len 262144
 --max-num-seqs 16
 --max-num-batched-tokens 8192
+--max-cudagraph-capture-size 32
 --enable-chunked-prefill
 --enable-prefix-caching
 --prefix-match-unit 16
@@ -147,6 +152,7 @@ Current vLLM `0.27.2` + RedHat DSpark profile:
 --tool-call-parser qwen3_coder
 --enable-auto-tool-choice
 --reasoning-parser qwen3
+--default-chat-template-kwargs '{"enable_thinking":true,"preserve_thinking":true,"reasoning_effort":"medium"}'
 ```
 
 Earlier vLLM `0.26` + DFlash profile:
@@ -194,13 +200,16 @@ Built from our own DGX Spark experiments with:
 
 ## Files
 
-- [`scripts/start-qwen-native-vllm027-redhat-dspark.sh`](scripts/start-qwen-native-vllm027-redhat-dspark.sh) — current vLLM 0.27 + DSpark launcher
+- [`scripts/start-qwen-vllm028-redhat-dspark.sh`](scripts/start-qwen-vllm028-redhat-dspark.sh) — current vLLM 0.28 + DSpark launcher
+- [`scripts/start-qwen-native-vllm027-redhat-dspark.sh`](scripts/start-qwen-native-vllm027-redhat-dspark.sh) — measured vLLM 0.27.2 + DSpark launcher
 - [`scripts/start-qwen-native-vllm026.sh`](scripts/start-qwen-native-vllm026.sh) — earlier native vLLM 0.26 + DFlash launcher
 - [`scripts/stop-qwen.sh`](scripts/stop-qwen.sh) — stop helper
 - [`scripts/benchmark-qwen.py`](scripts/benchmark-qwen.py) — OpenAI-compatible benchmark
-- [`systemd/qwen-vllm.service`](systemd/qwen-vllm.service) — optional autostart template
+- [`systemd/qwen-vllm028.service`](systemd/qwen-vllm028.service) — vLLM 0.28 autostart template
+- [`systemd/qwen-vllm.service`](systemd/qwen-vllm.service) — vLLM 0.27 autostart template
 - [`docs/CONFIG.md`](docs/CONFIG.md) — flag notes
 - [`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md) — common failures
-- [`results/2026-08-15-native-vllm0272-redhat-dspark-k8-gpu075.md`](results/2026-08-15-native-vllm0272-redhat-dspark-k8-gpu075.md) — current vLLM 0.27.2 + DSpark + GPU 0.75 result
+- [`results/2026-08-15-native-vllm0272-redhat-dspark-k8-gpu075.md`](results/2026-08-15-native-vllm0272-redhat-dspark-k8-gpu075.md) — measured vLLM 0.27.2 + DSpark + GPU 0.75 result
+- [`results/2026-08-23-vllm028-redhat-dspark-k8-production-profile.md`](results/2026-08-23-vllm028-redhat-dspark-k8-production-profile.md) — retained vLLM 0.28 production settings
 - [`results/2026-08-11-native-vllm027-redhat-dspark-k8.md`](results/2026-08-11-native-vllm027-redhat-dspark-k8.md) — earlier vLLM 0.27 + fixed-KV DSpark result
 - [`results/2026-07-30-native-vllm026-dflash-k7.md`](results/2026-07-30-native-vllm026-dflash-k7.md) — measured native vLLM result
