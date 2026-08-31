@@ -44,10 +44,10 @@ Spec decode: DSpark, K=8
 Tool parser: qwen3_coder
 Reasoning parser: qwen3
 Thinking: enabled, medium reasoning effort
-Sampling: temperature 0.6, top_p 0.95, top_k 20
+Sampling: temperature 0.2, top_p 0.95, top_k 20
 ```
 
-The 0.28 launch profile is preserved from production in [`scripts/start-qwen-vllm028-redhat-dspark.sh`](scripts/start-qwen-vllm028-redhat-dspark.sh). Its exact settings are recorded in [`results/2026-08-23-vllm028-redhat-dspark-k8-production-profile.md`](results/2026-08-23-vllm028-redhat-dspark-k8-production-profile.md). A fresh fixed-decode result was not retained for 0.28, so the measured figures below remain tied to 0.27.2.
+The 0.28 launch profile is preserved from production in [`scripts/start-qwen-vllm028-redhat-dspark.sh`](scripts/start-qwen-vllm028-redhat-dspark.sh). It uses `temperature 0.2` as the balanced production default after local C1/C4 testing. Its earlier recorded settings remain in [`results/2026-08-23-vllm028-redhat-dspark-k8-production-profile.md`](results/2026-08-23-vllm028-redhat-dspark-k8-production-profile.md). The measured figures below remain tied to 0.27.2.
 
 ### Measured vLLM 0.27.2 + RedHat DSpark benchmark
 
