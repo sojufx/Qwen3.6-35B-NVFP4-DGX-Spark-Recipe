@@ -20,11 +20,11 @@
 --speculative-config '{"method":"dspark","model":"RedHatAI/Qwen3.6-35B-A3B-speculator.dspark","num_speculative_tokens":8}'
 ```
 
-This is the retained production profile from native vLLM `0.28.0`. It keeps medium thinking while using deterministic sampling for stronger DSpark acceptance:
+This is the retained production profile from native vLLM `0.28.0`. It retains medium thinking and the original sampling defaults:
 
 ```bash
 --default-chat-template-kwargs '{"enable_thinking":true,"preserve_thinking":true,"reasoning_effort":"medium"}'
---override-generation-config '{"temperature":0.0,"top_p":0.95,"top_k":20,"min_p":0.0,"presence_penalty":0.0,"repetition_penalty":1.0}'
+--override-generation-config '{"temperature":0.6,"top_p":0.95,"top_k":20,"min_p":0.0,"presence_penalty":0.0,"repetition_penalty":1.0}'
 ```
 
 The startup and benchmark figures below are from the earlier vLLM `0.27.2rc1.dev91+g1f7427bc0` profile, not vLLM 0.28.

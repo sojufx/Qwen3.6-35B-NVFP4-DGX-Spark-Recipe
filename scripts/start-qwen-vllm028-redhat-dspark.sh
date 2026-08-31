@@ -46,5 +46,5 @@ exec "$PYTHON_BIN" -m vllm.entrypoints.openai.api_server \
   --default-chat-template-kwargs '{"enable_thinking":true,"preserve_thinking":true,"reasoning_effort":"medium"}' \
   --tool-call-parser qwen3_coder \
   --enable-auto-tool-choice \
-  --override-generation-config '{"temperature":0.0,"top_p":0.95,"top_k":20,"min_p":0.0,"presence_penalty":0.0,"repetition_penalty":1.0}' \
+  --override-generation-config '{"temperature":0.6,"top_p":0.95,"top_k":20,"min_p":0.0,"presence_penalty":0.0,"repetition_penalty":1.0}' \
   --api-key "${VLLM_API_KEY:?Set VLLM_API_KEY}"
